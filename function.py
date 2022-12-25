@@ -436,3 +436,15 @@ class Client():
             'GET', '/api/v1/sse?token=' + streamingApiToken + '&deviceToken=&deviceType=&clientType=PC&pingSecs=' + str(ping) +
             '&lastEventId=' + lastEventId, headers=self.defaultHeaders)
         return poll
+
+    def changeNickname(self, chatId: str, nickname: str):
+        """
+        更改使用者的 nickname
+        """
+        data = {"nickname": nickname}
+        return json.loads(self.session.put(
+            url='https://chat.line.biz/api/v1/bots/'+self.mid+'/chats/'+chatId+'/nickname',
+            headers=self.defaultHeaders,
+            json=data,
+            allow_redirects=True
+        ).text)
