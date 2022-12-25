@@ -244,6 +244,10 @@ class Client():
         ).text)["list"]
 
     def getMessages(self, chatId):
+        """
+        取得對話事件（送出訊息、收到訊息或已讀等等都是一種事件） \n
+        預設顯示 50 筆事件
+        """
         return json.loads(self.session.get(
             url='https://chat.line.biz/api/v1/bots/'+self.mid+'/messages/'+chatId,
             headers=self.defaultHeaders,
@@ -268,6 +272,10 @@ class Client():
         ).text)
 
     def getChat(self, chatId):
+        """
+        取得關於此 chatId 的詳細資訊 \n
+        例如是否已讀、名稱、狀態等等
+        """
         return json.loads(self.session.get(
             url='https://chat.line.biz/api/v1/bots/'+self.mid+'/chats/'+chatId,
             headers=self.defaultHeaders,
