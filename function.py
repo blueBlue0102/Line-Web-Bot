@@ -7,7 +7,6 @@ import numpy
 import http.client
 import random
 import string
-import io
 import sys
 
 
@@ -32,12 +31,12 @@ class Client():
         with open(filename, "w") as f:
             json.dump(data, f, indent=4, sort_keys=True)
 
-    def readQrCode(self, raw):
+    def displayQrCode(self, raw):
         img_array = numpy.asarray(bytearray(raw), dtype=numpy.uint8)
-        im = cv2.imdecode(img_array, 0)
-        det = cv2.QRCodeDetector()
-        retval, points, straight_qrcode = det.detectAndDecode(im)
-        return retval
+        img = cv2.imdecode(img_array, 0)
+        cv2.imshow('QR code for login', img)
+        cv2.waitKey(0)
+        return
 
     def loadSession(self):
         credential = self.readJson("credential.json")
@@ -141,8 +140,12 @@ class Client():
                          'user-agent':
                          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'},
                 data=None, allow_redirects=True).content
-            qrLink = self.readQrCode(downloadData)
-            print("Your QR link: "+qrLink)
+            print("Please use cellphone to scan qrcode for login")
+            print("PRESS ANY KEY BEFORE SCAN")
+            print("PRESS ANY KEY BEFORE SCAN")
+            print("PRESS ANY KEY BEFORE SCAN")
+            self.displayQrCode(downloadData)
+            print("Waiting for scan...")
 
             pinCode = json.loads(
                 self.session.get(
