@@ -57,10 +57,10 @@ class Client():
         self.userId = credential["userId"]
         self.getCsrfToken()
         print("[ NOTIF ] Success login...")
-        check = self.getChatMode()
-        if 'code' in check:
-            print("[ ERROR ] Please set bot to chat mode!!!")
-            sys.exit()
+        # check = self.getChatMode()
+        # if 'code' in check:
+        #     print("[ ERROR ] Please set bot to chat mode!!!")
+        #     sys.exit()
 
     def loginWithQrCode(self):
         credential = self.readJson("credential.json")
