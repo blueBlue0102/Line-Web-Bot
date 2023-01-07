@@ -304,11 +304,16 @@ class Client():
             allow_redirects=True
         ).text)
 
-    def markAsRead(self, chatId):
+    def markAsRead(self, chatId, messageId):
+        """
+        將特定 chat 進行已讀 \n
+        需要傳遞 messageId
+        """
+        data = {"messageId": messageId}
         return json.loads(self.session.put(
             url='https://chat.line.biz/api/v1/bots/'+self.mid+'/chats/'+chatId+'/markAsRead',
             headers=self.defaultHeaders,
-            data=None,
+            json=data,
             allow_redirects=True
         ).text)
 
