@@ -10,6 +10,7 @@ import string
 import sys
 import os
 
+lineCredentialPath = os.path.join('secrets', 'line-credential.json')
 
 class Client():
     def __init__(self):
@@ -42,7 +43,7 @@ class Client():
         return
 
     def loadSession(self):
-        credential = self.readJson("credential.json")
+        credential = self.readJson(lineCredentialPath)
         self.session.cookies.set('ses', credential["authToken"])
         if "mid" not in credential:
             bots = self.getBots()
@@ -55,7 +56,7 @@ class Client():
             credential["mid"] = bots[choice]['botId']
             credential["userId"] = bots[choice]['basicSearchId']
             credential["name"] = bots[choice]['name']
-            self.writeJson("credential.json", credential)
+            self.writeJson(lineCredentialPath, credential)
         self.mid = credential["mid"]
         self.userId = credential["userId"]
         self.getCsrfToken()
@@ -67,7 +68,7 @@ class Client():
         #     sys.exit()
 
     def loginWithQrCode(self):
-        credential = self.readJson("credential.json")
+        credential = self.readJson(lineCredentialPath)
         if "authToken" in credential:
             self.session.cookies.set('ses', credential["authToken"])
             checkLogin = json.loads(self.session.get(
@@ -221,7 +222,7 @@ class Client():
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36'},
             data=None, allow_redirects=False)
         credential["authToken"] = authLogin_result.headers["Set-Cookie"].split(";")[0].replace("ses=", "")
-        self.writeJson("credential.json", credential)
+        self.writeJson(lineCredentialPath, credential)
 
     def getCsrfToken(self):
         _csrf = json.loads(self.session.get(
