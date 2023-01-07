@@ -8,6 +8,7 @@ import http.client
 import random
 import string
 import sys
+import os
 
 
 class Client():
@@ -24,6 +25,8 @@ class Client():
         self.loadSession()
 
     def readJson(self, filename):
+        if not os.path.exists(filename):
+            self.writeJson(filename, {})
         with open(filename) as f:
             return json.load(f)
 
