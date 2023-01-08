@@ -29,6 +29,7 @@ for chat in chatList:
                 # 沒找到
                 client.sendMessage(chat['chatId'], ("很抱歉，沒有找到對應的行程代碼\n"
                                                     "請確認代碼沒有輸入錯誤，或是再試一次"))
+                client.markAsRead(chat['chatId'], chat['latestEvent']['message']['id'])
                 continue
             else:
                 # 找到了，開始執行動作
@@ -41,7 +42,7 @@ for chat in chatList:
                     f'名稱：{tripData["pathName"]}\n'
                     f'入時：{inDatetime} (GMT+8)\n'
                     f'出時：{outDatetime} (GMT+8)\n'
-                    f'行程內容：{tripData["pathDetail"]}\n'
+                    f'行程內容：\n{tripData["pathDetail"]}\n\n'
                     f'▲ 延遲 {tripData["delayHour"]} 小時通報'
                 )
                 client.sendMessage(chat['chatId'], message)
