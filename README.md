@@ -6,7 +6,7 @@
 ## Setup
 
 ```
-pip install -r requirements.txt
+pip install -r requirements.txt -r requirements-dev.txt
 ```
 
 ### 憑證
@@ -32,4 +32,12 @@ firebase 憑證須至 GCP firebase 中取得
 
 ```
 pipreqs --encoding utf-8 --force
+```
+
+## Docker
+
+### Build Image
+
+```
+docker build . -t linebot:1.0.0
 ```
