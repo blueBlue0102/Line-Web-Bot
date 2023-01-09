@@ -12,7 +12,7 @@ COPY --from=builder /root/.local /root/.local
 
 WORKDIR /app
 
-COPY . .
+COPY main .
 
 ENV PATH=/root/.local/bin:$PATH
 

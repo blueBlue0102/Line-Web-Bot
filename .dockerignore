@@ -1,5 +1,3 @@
 *
-!secrets
-!run.py
-!function.py
+!main/*.py
 !requirements.txt
