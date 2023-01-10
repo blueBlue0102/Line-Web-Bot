@@ -7,7 +7,7 @@ import string
 import sys
 import os
 
-lineCredentialPath = os.path.join("secrets", "line-credential.json")
+lineCredentialPath = os.path.join("secrets", "line", "line-credential.json")
 
 
 class Client:
@@ -38,7 +38,7 @@ class Client:
     def loadSession(self):
         """
         讀取特定路徑下的 Line 憑證 \n
-        若憑證不存在，則報錯誤
+        若憑證不存在，則報錯誤 \n
         若憑證存在，但是驗證後發現過期，報錯誤
         """
         credential = self.readJson(lineCredentialPath)

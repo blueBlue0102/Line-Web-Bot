@@ -10,7 +10,7 @@ from function import *
 client = Client()
 # Firebase Init
 firebaseDatabaseURL = "https://hiking-guard.firebaseio.com/"
-firebaseCredentialPath = os.path.join("secrets", "firebase-credential.json")
+firebaseCredentialPath = os.path.join("secrets", "firebase", "firebase-credential.json")
 firebase_admin.initialize_app(credentials.Certificate(firebaseCredentialPath), {"databaseURL": firebaseDatabaseURL})
 
 # 抓取最多 25 個訊息未讀的訊息，判斷是否要建立行程
