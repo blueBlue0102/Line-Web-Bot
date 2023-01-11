@@ -5,13 +5,24 @@
 
 ## Setup
 
+先使用 pyenv 建立 3.11.1 的 python 環境
+
+### 建立環境 & 安裝相依套件
+
 ```
+pip install virtualenv
+python -m virtualenv venv
 pip install -r requirements.txt -r requirements-dev.txt
 ```
 
 ### 憑證
 
 目前需要 Line 和 firebase 的憑證
+
+```
+mkdir –p secrets/line
+mkdir –p secrets/firebase
+```
 
 #### Line
 
