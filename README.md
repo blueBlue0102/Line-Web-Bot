@@ -12,6 +12,11 @@
 ```
 pip install virtualenv
 python -m virtualenv venv
+```
+
+切換至 venv 的環境後
+
+```
 pip install -r requirements.txt -r requirements-dev.txt
 ```
 
@@ -20,8 +25,8 @@ pip install -r requirements.txt -r requirements-dev.txt
 目前需要 Line 和 firebase 的憑證
 
 ```
-mkdir –p secrets/line
-mkdir –p secrets/firebase
+mkdir -p secrets/line
+mkdir -p secrets/firebase
 ```
 
 #### Line
