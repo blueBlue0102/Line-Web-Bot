@@ -36,8 +36,11 @@ pipreqs --encoding utf-8 --force
 
 ## Docker
 
-### Build Image
+### Build & Push Image
+
+TODO: 改成正式專案的路徑
 
 ```
-docker build . -t linebot:1.0.0
+docker build . -t asia-east1-docker.pkg.dev/blue-chatbot-371911/hiking-bot/hiking-bot:1.0.0
+docker push asia-east1-docker.pkg.dev/blue-chatbot-371911/hiking-bot/hiking-bot:1.0.0
 ```
