@@ -1,17 +1,13 @@
-import os
 import time
 from datetime import datetime, timedelta
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
-from function import *
+from firebaseClient import FirebaseClient
+from function import Client
+
 
 # Line Bot Init
 client = Client()
 # Firebase Init
-firebaseDatabaseURL = "https://hiking-guard.firebaseio.com/"
-firebaseCredentialPath = os.path.join("secrets", "firebase", "firebase-credential.json")
-firebase_admin.initialize_app(credentials.Certificate(firebaseCredentialPath), {"databaseURL": firebaseDatabaseURL})
+firebaseClient = FirebaseClient()
 
 # 抓取最多 25 個訊息未讀的訊息，判斷是否要建立行程
 # 如果是，則開始建立行程的流程。建立完成後將訊息已讀
@@ -22,7 +18,7 @@ for chat in chatList:
         if chat["latestEvent"]["message"]["text"][0:5] == "#建立行程":
             tripId = chat["latestEvent"]["message"]["text"][6:]
             # 開始在 firebase 中進行尋找對應的行程
-            tripData = db.reference(f"/TRIP/{tripId}").get()
+            tripData = firebaseClient.getTrip(tripId)
             if tripData is None:
                 # 沒找到
                 client.sendMessage(chat["chatId"], ("很抱歉，沒有找到對應的行程代碼\n" "請確認代碼沒有輸入錯誤，或是再試一次"))
