@@ -291,5 +291,5 @@ def loginWithQrCode():
 
     writeJson(lineCredentialPath, credential)
 
-
-loginWithQrCode()
+if __name__ == "__main__":
+    loginWithQrCode()
