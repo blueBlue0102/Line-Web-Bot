@@ -6,10 +6,13 @@ from firebaseClient import FirebaseClient
 lineClient = LineClient()
 firebaseClient = FirebaseClient()
 
+# TODO: 任何外部服務的叫用，都應設計失敗時的處理機制
+# TODO: 要假設 Line 的 API 所回傳的 Data Type 可能改變
+
 # 抓取最多 25 個訊息未讀的訊息，判斷是否要建立行程
 # 如果是，則開始建立行程的流程。建立完成後將訊息已讀
 # 如果不是，則忽略
-chatList = lineClient.getChatList(folderType="UNREAD")["list"]
+chatList = lineClient.getChatList(folderType="INBOX")["list"]
 for chat in chatList:
     if chat["latestEvent"]["type"] == "message" and chat["latestEvent"]["message"]["type"] == "text":
         if chat["latestEvent"]["message"]["text"][0:5] == "#建立行程":
