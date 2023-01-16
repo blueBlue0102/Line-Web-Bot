@@ -19,7 +19,6 @@ for chat in chatList:
             if tripData is None:
                 # 沒找到
                 lineClient.sendMessage(chat["chatId"], ("很抱歉，沒有找到對應的行程代碼\n" "請確認代碼沒有輸入錯誤，或是再試一次"))
-                lineClient.markAsRead(chat["chatId"], chat["latestEvent"]["message"]["id"])
                 continue
             else:
                 # 找到了，開始執行動作
@@ -52,13 +51,11 @@ for chat in chatList:
                     ),
                 )
                 lineClient.addFollowedUp(chat["chatId"])
-                lineClient.markAsRead(chat["chatId"], chat["latestEvent"]["message"]["id"])
         elif chat["latestEvent"]["message"]["text"][0:5] == "#結束行程":
             userName = lineClient.getChat(chat["chatId"])["profile"]["name"]
             lineClient.changeNickname(chat["chatId"], userName)
             lineClient.sendMessage(chat["chatId"], "行程成功結束")
             lineClient.addResolved(chat["chatId"])
-            lineClient.markAsRead(chat["chatId"], chat["latestEvent"]["message"]["id"])
     # 避免過於頻繁的呼叫 Line API
     # time.sleep(0.05)
 print("done")
