@@ -22,7 +22,10 @@ pip install -r requirements.txt -r requirements-dev.txt
 
 ### 憑證
 
-目前需要 Line 和 firebase 的憑證
+需要 Line 和 firebase 的憑證  
+目前憑證的位置固定放在專案根目錄的 `./secrets` 之下  
+
+*註：由於 Cloud Run 無法 Mount 一個路徑下的多個檔案，所以各個憑證會再有自己的資料夾*
 
 ```
 mkdir -p secrets/line
@@ -35,7 +38,7 @@ Line 的憑證目前須經由手機掃描 QR code 登入來產生獲得
 可經由 `login.py` 來產生
 
 ```
-python login.py
+python scripts/login.py
 ```
 
 #### Firebase
@@ -44,11 +47,14 @@ firebase 憑證須至 GCP firebase 中取得
 
 ## requirements.txt
 
-使用 `pipreqs` 進行更新
+`requirements.txt` 為運行本專案所必須的相依套件  
+使用 `pipreqs` 進行更新 `requirements.txt`
 
 ```
 pipreqs --encoding utf-8 --force
 ```
+
+`requirements-dev.txt` 則為進行開發時才需要的套件
 
 ## Docker
 
