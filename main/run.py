@@ -104,6 +104,7 @@ def scanChatList():
                 startTrip(chatId, tripId, username)
                 print(f"scanChatList: User [{username}] start a trip.")
             elif isTripStop(chat):
+                username = getUsername(chat)
                 stopTrip(chatId)
                 print(f"scanChatList: User [{username}] stop a trip.")
             else:
@@ -152,6 +153,7 @@ def sseChatList():
                             startTrip(chatId, tripId, username)
                             print(f"sseChatList: User [{username}] start a trip.")
                         elif isTripStop(chunk):
+                            username = lineClient.getChat(chatId)["profile"]["name"]
                             stopTrip(chatId)
                             print(f"sseChatList: User [{username}] stop a trip.")
 
