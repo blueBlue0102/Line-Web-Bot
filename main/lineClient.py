@@ -166,15 +166,12 @@ class LineClient:
 
     def getChatList(self, folderType="ALL"):  # ['NONE', 'ALL', 'INBOX', 'UNREAD', 'FOLLOW_UP', 'DONE', 'SPAM']
         """
-        `folderType = 'NONE', 'ALL', 'INBOX', 'UNREAD', 'FOLLOW_UP', 'DONE', 'SPAM'`
+        `folderType = 'NONE', 'ALL', 'INBOX', 'UNREAD', 'FOLLOW_UP', 'DONE', 'SPAM'`\n
+        取得 25 筆聊天
         """
         return json.loads(
             self.session.get(
-                url="https://chat.line.biz/api/v2/bots/"
-                + self.mid
-                + "/chats?folderType="
-                + folderType
-                + "&tagIds=&limit=25",
+                url="https://chat.line.biz/api/v2/bots/" + self.mid + "/chats?folderType=" + folderType + "&tagIds=&limit=25",
                 headers=self.defaultHeaders,
                 data=None,
                 allow_redirects=True,

@@ -10,9 +10,7 @@ class FirebaseClient:
         firebaseDatabaseURL = "https://hiking-guard.firebaseio.com/"
         firebaseCredentialPath = os.path.join("secrets", "firebase", "firebase-credential.json")
         try:
-            firebase_admin.initialize_app(
-                credentials.Certificate(firebaseCredentialPath), {"databaseURL": firebaseDatabaseURL}
-            )
+            firebase_admin.initialize_app(credentials.Certificate(firebaseCredentialPath), {"databaseURL": firebaseDatabaseURL})
         except Exception as e:
             sys.exit(f"Firebase initialization failed. Error:\n{e}")
 
