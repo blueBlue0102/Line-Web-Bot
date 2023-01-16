@@ -165,6 +165,9 @@ class LineClient:
         )
 
     def getChatList(self, folderType="ALL"):  # ['NONE', 'ALL', 'INBOX', 'UNREAD', 'FOLLOW_UP', 'DONE', 'SPAM']
+        """
+        `folderType = 'NONE', 'ALL', 'INBOX', 'UNREAD', 'FOLLOW_UP', 'DONE', 'SPAM'`
+        """
         return json.loads(
             self.session.get(
                 url="https://chat.line.biz/api/v2/bots/"
