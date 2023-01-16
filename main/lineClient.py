@@ -7,11 +7,10 @@ import string
 import sys
 import os
 
-lineCredentialPath = os.path.join("secrets", "line", "line-credential.json")
 
-
-class Client:
+class LineClient:
     def __init__(self):
+        self.lineCredentialPath = os.path.join("secrets", "line", "line-credential.json")
         self.defaultHeaders = {
             "accept": "application/json, text/plain, */*",
             "accept-encoding": "gzip, deflate",
@@ -41,7 +40,7 @@ class Client:
         若憑證不存在，則報錯誤 \n
         若憑證存在，但是驗證後發現過期，報錯誤
         """
-        credential = self.readJson(lineCredentialPath)
+        credential = self.readJson(self.lineCredentialPath)
 
         if not all(
             credKey in credential
