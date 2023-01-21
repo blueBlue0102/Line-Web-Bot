@@ -34,12 +34,9 @@ mkdir -p secrets/firebase
 
 #### Line
 
-Line 的憑證目前須經由手機掃描 QR code 登入來產生獲得  
-可經由 `login.py` 來產生
+於專案根目錄新增檔案 `.env`，並依照 `.example.env` 的格式填入 Line 的帳號密碼
 
-```
-python scripts/login.py
-```
+完成後使用 VSCode 執行 `Login` 即可進行登入
 
 #### Firebase
 
