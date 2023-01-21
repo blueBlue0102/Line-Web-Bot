@@ -10,7 +10,9 @@ import os
 
 class LineClient:
     def __init__(self):
-        self.lineCredentialPath = os.path.join("secrets", "line", "line-credential.json")
+        self.email = os.environ["LINE_ACCOUNT_EMAIL"]
+        self.password = os.environ["LINE_ACCOUNT_PASSWORD"]
+        self.mid = os.environ["LINE_ACCOUNT_MID"]
         self.defaultHeaders = {
             "accept": "application/json, text/plain, */*",
             "accept-encoding": "gzip, deflate",
@@ -22,49 +24,60 @@ class LineClient:
         }
         self.session = requests.session()
         self.tempData = {}
-        self.loadSession()
+        self.loginWithEmail()
 
-    def readJson(self, filename):
-        if not os.path.exists(filename):
-            self.writeJson(filename, {})
-        with open(filename) as f:
-            return json.load(f)
-
-    def writeJson(self, filename, data):
-        with open(filename, "w") as f:
-            json.dump(data, f, indent=4, sort_keys=True)
-
-    def loadSession(self):
+    def loginWithEmail(self):
         """
-        讀取特定路徑下的 Line 憑證 \n
-        若憑證不存在，則報錯誤 \n
-        若憑證存在，但是驗證後發現過期，報錯誤
+        根據環境參數所設定的 email 和密碼進行 Line 帳號的登入
         """
-        credential = self.readJson(self.lineCredentialPath)
-
-        if not all(
-            credKey in credential
-            for credKey in [
-                "authToken",
-                "mid",
-                "userId",
-            ]
-        ):
-            sys.exit("Certificate verification failed, please log in again.")
-
-        self.session.cookies.set("ses", credential["authToken"])
-        self.mid = credential["mid"]
-        self.userId = credential["userId"]
-        checkLogin = json.loads(
+        csrfToken = (
             self.session.get(
-                url="https://chat.line.biz/api/v1/bots?noFilter=true&limit=1000",
-                headers=self.defaultHeaders,
+                url="https://account.line.biz/login?redirectUri=https%3A%2F%2Fchat.line.biz%2F",
+                headers={
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Connection": "keep-alive",
+                    "Host": "account.line.biz",
+                    "Sec-Fetch-Dest": "document",
+                    "Sec-Fetch-Mode": "navigate",
+                    "Sec-Fetch-Site": "none",
+                    "Sec-Fetch-User": "?1",
+                    "Upgrade-Insecure-Requests": "1",
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36",
+                },
                 data=None,
                 allow_redirects=True,
-            ).text
+            )
+            .text.split('name="x-csrf" content="')[1]
+            .split('"')[0]
         )
-        if "code" in checkLogin:
-            sys.exit(f'Certificate verification failed, please log in again. Code: {checkLogin["code"]}')
+
+        loginResult = self.session.post(
+            url="https://account.line.biz/api/login/email",
+            headers={
+                "Accept": "application/json, text/plain, */*",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Cache-Control": "max-age=0",
+                "Connection": "keep-alive",
+                "Content-Type": "application/json;charset=UTF-8",
+                "Host": "account.line.biz",
+                "Origin": "https://account.line.biz",
+                "Referer": "https://account.line.biz/login?redirectUri=https%3A%2F%2Fchat.line.biz%2F",
+                "Sec-Fetch-Dest": "empty",
+                "Sec-Fetch-Mode": "cors",
+                "Sec-Fetch-Site": "same-origin",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36",
+                "X-XSRF-TOKEN": csrfToken,
+            },
+            json={"email": self.email, "password": self.password, "stayLoggedIn": False},
+        )
+
+        if loginResult.status_code != 200:
+            sys.exit(f"Login Failed, Status Code: {loginResult.status_code}, Error: {loginResult.text}")
+
+        # accessToken = loginResult.headers["Set-Cookie"].split(";")[0].replace("ses=", "")
 
         self.getCsrfToken()
 

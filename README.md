@@ -20,25 +20,28 @@ python -m virtualenv venv
 pip install -r requirements.txt -r requirements-dev.txt
 ```
 
+### 環境參數
+
+`.example.env` 為環境參數的範例檔
+
+- `LINE_ACCOUNT_EMAIL`  
+  登入 Line 帳號用的 email
+- `LINE_ACCOUNT_PASSWORD`  
+  登入 Line 帳號用的 password
+- `LINE_ACCOUNT_MID`  
+  帳號的 id  
+  可於 `https://chat.line.biz/{LINE_ACCOUNT_MID}` 取得
+
 ### 憑證
 
-需要 Line 和 firebase 的憑證  
+需要 firebase 的憑證  
 目前憑證的位置固定放在專案根目錄的 `./secrets` 之下  
 
 *註：由於 Cloud Run 無法 Mount 一個路徑下的多個檔案，所以各個憑證會再有自己的資料夾*
 
 ```
-mkdir -p secrets/line
 mkdir -p secrets/firebase
 ```
-
-#### Line
-
-於專案根目錄新增檔案 `.env`，並依照 `.example.env` 的格式填入 Line 的帳號密碼
-
-完成後使用 VSCode 執行 `Login` 即可進行登入
-
-#### Firebase
 
 firebase 憑證須至 GCP firebase 中取得
 

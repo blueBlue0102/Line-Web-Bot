@@ -12,15 +12,6 @@
       "envFile": "${workspaceFolder}/.env",
       "console": "integratedTerminal",
       "justMyCode": true
-    },
-    {
-      "name": "Login",
-      "type": "python",
-      "request": "launch",
-      "program": "./scripts/login.py",
-      "envFile": "${workspaceFolder}/.env",
-      "console": "integratedTerminal",
-      "justMyCode": true
     }
   ]
 }
