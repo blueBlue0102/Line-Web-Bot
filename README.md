@@ -22,15 +22,7 @@ pip install -r requirements.txt -r requirements-dev.txt
 
 ### 環境參數
 
-`.example.env` 為環境參數的範例檔
-
-- `LINE_ACCOUNT_EMAIL`  
-  登入 Line 帳號用的 email
-- `LINE_ACCOUNT_PASSWORD`  
-  登入 Line 帳號用的 password
-- `LINE_ACCOUNT_MID`  
-  帳號的 id  
-  可於 `https://chat.line.biz/{LINE_ACCOUNT_MID}` 取得
+`.example.env` 為環境參數的範例檔，內容包含各參數的說明
 
 ### 憑證
 
