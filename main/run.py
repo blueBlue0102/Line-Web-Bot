@@ -1,6 +1,7 @@
+import os
+import sys
 import time
 import json
-import traceback
 from datetime import datetime, timedelta
 from lineClient import LineClient
 from firebaseClient import FirebaseClient
@@ -102,11 +103,11 @@ def scanChatList():
                 username = getUsername(chat)
                 tripId = getTripId(chat)
                 startTrip(chatId, tripId, username)
-                print(f"scanChatList: User [{username}] start a trip.")
+                print(f"User [{username}] start a trip.")
             elif isTripStop(chat):
                 username = getUsername(chat)
                 stopTrip(chatId)
-                print(f"scanChatList: User [{username}] stop a trip.")
+                print(f"User [{username}] stop a trip.")
             else:
                 trigger = False
                 count -= 1
@@ -115,10 +116,10 @@ def scanChatList():
             if trigger:
                 time.sleep(0.25)
 
-    print(f"scanChatList Finish: {count}")
+    print(f"scanChatList Finish, count: {count}")
 
 
-def sseChatList():
+def sseChatList(shutdownMinutes=10):
     """
     透過 SSE 取得 Line 的即時訊息通知
     收到訊息後，依據內容執行不同行為
@@ -133,7 +134,16 @@ def sseChatList():
     def isTripStop(chunk) -> bool:
         return chunk["payload"]["message"]["text"][0:5] == "#結束行程"
 
+    def isTimesUp(startTime) -> bool:
+        if shutdownMinutes <= 0:
+            return False
+        elif (time.time() - startTime) // 60 >= shutdownMinutes:
+            return True
+        else:
+            return False
+
     poll = lineClient.openPolling()
+    startTime = time.time()
     with poll.getresponse() as response:
         while not response.closed:
             for data in response:
@@ -151,26 +161,18 @@ def sseChatList():
                             tripId = getTripId(chunk)
                             username = lineClient.getChat(chatId)["profile"]["name"]
                             startTrip(chatId, tripId, username)
-                            print(f"sseChatList: User [{username}] start a trip.")
+                            print(f"User [{username}] start a trip.")
                         elif isTripStop(chunk):
                             username = lineClient.getChat(chatId)["profile"]["name"]
                             stopTrip(chatId)
-                            print(f"sseChatList: User [{username}] stop a trip.")
+                            print(f"User [{username}] stop a trip.")
+
+                if isTimesUp(startTime):
+                    print(f"Time's up: {shutdownMinutes} minutes.")
+                    sys.exit(0)
 
 
 if __name__ == "__main__":
-    errorRetry = 0
-    count = 0
-    while True:
-        try:
-            count += 1
-            print(f"Start: {count}")
-            scanChatList()
-            sseChatList()
-        except Exception as e:
-            if errorRetry >= 3:
-                raise (e)
-            else:
-                traceback.print_exc()
-                errorRetry += 1
-                print(f"Error Retry: {errorRetry}")
+    shutdownMinutes = int(os.environ.get("SHUTDOWN_MINUTES", 10))
+    scanChatList()
+    sseChatList(shutdownMinutes)
