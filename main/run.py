@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import time
 import json
@@ -78,10 +79,21 @@ def scanChatList():
     """
 
     def isTripStart(chat) -> bool:
-        return chat["status"] != "blocked" and chat["latestEvent"]["message"]["text"][0:5] == "#建立行程"
+        if chat["status"] == "blocked":
+            return False
+        msg = chat["latestEvent"]["message"]["text"]
+        regResult = re.search("T-[0-9]+-[a-zA-Z0-9]{3}", msg)
+        return regResult is not None
 
     def getTripId(chat) -> str:
-        return chat["latestEvent"]["message"]["text"][6:]
+        if chat["status"] == "blocked":
+            return ""
+        msg = chat["latestEvent"]["message"]["text"]
+        regResult = re.search("T-[0-9]+-[a-zA-Z0-9]{3}", msg)
+        if regResult is None:
+            return ""
+        else:
+            return regResult.group()
 
     def isTripStop(chat) -> bool:
         return chat["status"] != "blocked" and chat["latestEvent"]["message"]["text"][0:5] == "#結束行程"
@@ -126,10 +138,17 @@ def sseChatList(shutdownMinutes=10):
     """
 
     def isTripStart(chunk) -> bool:
-        return chunk["payload"]["message"]["text"][0:5] == "#建立行程"
+        msg = chunk["payload"]["message"]["text"]
+        regResult = re.search("T-[0-9]+-[a-zA-Z0-9]{3}", msg)
+        return regResult is not None
 
     def getTripId(chunk) -> str:
-        return chunk["payload"]["message"]["text"][6:]
+        msg = chunk["payload"]["message"]["text"]
+        regResult = re.search("T-[0-9]+-[a-zA-Z0-9]{3}", msg)
+        if regResult is None:
+            return ""
+        else:
+            return regResult.group()
 
     def isTripStop(chunk) -> bool:
         return chunk["payload"]["message"]["text"][0:5] == "#結束行程"
