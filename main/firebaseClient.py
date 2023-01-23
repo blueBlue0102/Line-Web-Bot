@@ -7,7 +7,7 @@ from firebase_admin import db
 
 class FirebaseClient:
     def __init__(self):
-        firebaseDatabaseURL = "https://hiking-guard.firebaseio.com/"
+        firebaseDatabaseURL = os.environ["FIREBASE_URL"]
         firebaseCredentialPath = os.path.join("secrets", "firebase", "firebase-credential.json")
         try:
             firebase_admin.initialize_app(credentials.Certificate(firebaseCredentialPath), {"databaseURL": firebaseDatabaseURL})
