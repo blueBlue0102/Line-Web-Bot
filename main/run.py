@@ -80,6 +80,15 @@ def stopTrip(chatId: str):
     """
     lineClient.changeNickname(chatId, "")
     lineClient.addResolved(chatId)
+    pinnedMessageList = lineClient.getPinnedMessage(chatId)
+    for pinnedMessage in pinnedMessageList:
+        if (
+            pinnedMessage["type"] == "messageSent"
+            and pinnedMessage["message"]["type"] == "text"
+            and pinnedMessage["message"]["text"][0:20] == "【留守管理員通知頻道 - 旅程建立成功】"
+        ):
+            lineClient.unpinMessage(chatId, pinnedMessage["message"]["id"])
+            break
 
 
 def scanChatList():

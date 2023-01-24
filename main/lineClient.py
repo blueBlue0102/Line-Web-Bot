@@ -434,3 +434,16 @@ class LineClient:
             json=payload,
             allow_redirects=True,
         )
+
+    def getPinnedMessage(self, chatId: str):
+        """
+        取得所有釘選中的訊息
+        """
+        return json.loads(
+            self.session.get(
+                url="https://chat.line.biz/api/v2/bots/" + self.mid + "/messages/" + chatId + "/pin",
+                headers=self.defaultHeaders,
+                data=None,
+                allow_redirects=True,
+            ).text
+        )["messages"]
