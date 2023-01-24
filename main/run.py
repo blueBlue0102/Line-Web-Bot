@@ -131,7 +131,7 @@ def scanChatList():
     print(f"scanChatList Finish, count: {count}")
 
 
-def sseChatList(shutdownMinutes=10):
+def sseChatList(shutdownSeconds=10 * 60):
     """
     透過 SSE 取得 Line 的即時訊息通知
     收到訊息後，依據內容執行不同行為
@@ -154,9 +154,9 @@ def sseChatList(shutdownMinutes=10):
         return chunk["payload"]["message"]["text"][0:5] == "#結束行程"
 
     def isTimesUp(startTime) -> bool:
-        if shutdownMinutes <= 0:
+        if shutdownSeconds <= 0:
             return False
-        elif (time.time() - startTime) // 60 >= shutdownMinutes:
+        elif (time.time() - startTime) >= shutdownSeconds:
             return True
         else:
             return False
@@ -187,11 +187,11 @@ def sseChatList(shutdownMinutes=10):
                             print(f"User [{username}] stop a trip.")
 
                 if isTimesUp(startTime):
-                    print(f"Time's up: {shutdownMinutes} minutes.")
+                    print(f"Time's up: {shutdownSeconds} seconds.")
                     sys.exit(0)
 
 
 if __name__ == "__main__":
-    shutdownMinutes = int(os.environ.get("SHUTDOWN_MINUTES", 10))
+    shutdownSeconds = int(os.environ.get("SHUTDOWN_SECONDS", 10 * 60))
     scanChatList()
-    sseChatList(shutdownMinutes)
+    sseChatList(shutdownSeconds)
