@@ -401,12 +401,36 @@ class LineClient:
         """
         更改使用者的 nickname
         """
-        data = {"nickname": nickname}
+        payload = {"nickname": nickname}
         return json.loads(
             self.session.put(
                 url="https://chat.line.biz/api/v1/bots/" + self.mid + "/chats/" + chatId + "/nickname",
                 headers=self.defaultHeaders,
-                json=data,
+                json=payload,
                 allow_redirects=True,
             ).text
+        )
+
+    def pinMessage(self, chatId: str, messageId: str):
+        """
+        釘選特定訊息
+        """
+        payload = {"messageId": messageId}
+        return self.session.post(
+            url="https://chat.line.biz/api/v1/bots/" + self.mid + "/messages/" + chatId + "/pin",
+            headers=self.defaultHeaders,
+            json=payload,
+            allow_redirects=True,
+        )
+
+    def unpinMessage(self, chatId: str, messageId: str):
+        """
+        取消釘選特定訊息
+        """
+        payload = {"messageId": messageId}
+        return self.session.delete(
+            url="https://chat.line.biz/api/v1/bots/" + self.mid + "/messages/" + chatId + "/pin",
+            headers=self.defaultHeaders,
+            json=payload,
+            allow_redirects=True,
         )
