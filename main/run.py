@@ -67,7 +67,6 @@ def stopTrip(chatId: str):
     「結束行程」的處理邏輯
     """
     lineClient.changeNickname(chatId, "")
-    lineClient.sendMessage(chatId, "行程成功結束")
     lineClient.addResolved(chatId)
 
 
@@ -77,6 +76,12 @@ def scanChatList():
     如果是，則開始建立行程的流程
     如果不是，則忽略
     """
+
+    def isClientSendingTextMsg(chat) -> bool:
+        return chat["latestEvent"]["type"] == "message" and chat["latestEvent"]["message"]["type"] == "text"
+
+    def isGuardSendingTextMsg(chat) -> bool:
+        return chat["latestEvent"]["type"] == "messageSent" and chat["latestEvent"]["message"]["type"] == "text"
 
     def isTripStart(chat) -> bool:
         if chat["status"] == "blocked":
@@ -96,7 +101,7 @@ def scanChatList():
             return regResult.group()
 
     def isTripStop(chat) -> bool:
-        return chat["status"] != "blocked" and chat["latestEvent"]["message"]["text"][0:5] == "#結束行程"
+        return chat["status"] != "blocked" and chat["latestEvent"]["message"]["text"][0:4] == "留守結束"
 
     def getUsername(chat) -> str:
         if chat["chatType"] == "USER":
@@ -104,31 +109,24 @@ def scanChatList():
         else:
             return lineClient.getChat(chat["chatId"])["profile"]["name"]
 
-    count = 0
     chatList = lineClient.getChatList(folderType="INBOX")["list"]
     for chat in chatList:
-        if chat["latestEvent"]["type"] == "message" and chat["latestEvent"]["message"]["type"] == "text":
-            trigger = True
-            count += 1
-            chatId = chat["chatId"]
+        chatId = chat["chatId"]
+        if isClientSendingTextMsg(chat):
             if isTripStart(chat):
                 username = getUsername(chat)
                 tripId = getTripId(chat)
                 startTrip(chatId, tripId, username)
                 print(f"User [{username}] start a trip.")
-            elif isTripStop(chat):
+                time.sleep(0.25)
+        elif isGuardSendingTextMsg(chat):
+            if isTripStop(chat):
                 username = getUsername(chat)
                 stopTrip(chatId)
                 print(f"User [{username}] stop a trip.")
-            else:
-                trigger = False
-                count -= 1
-
-            # 避免過於頻繁的呼叫 Line API
-            if trigger:
                 time.sleep(0.25)
 
-    print(f"scanChatList Finish, count: {count}")
+    print(f"scanChatList Finish")
 
 
 def sseChatList(shutdownSeconds=10 * 60):
@@ -136,6 +134,22 @@ def sseChatList(shutdownSeconds=10 * 60):
     透過 SSE 取得 Line 的即時訊息通知
     收到訊息後，依據內容執行不同行為
     """
+
+    def isClientSendingTextMsg(chunk) -> bool:
+        return (
+            chunk["event"] == "chat"
+            and "subEvent" in chunk
+            and chunk["subEvent"] == "message"
+            and chunk["payload"]["message"]["type"] == "text"
+        )
+
+    def isGuardSendingTextMsg(chunk) -> bool:
+        return (
+            chunk["event"] == "chat"
+            and "subEvent" in chunk
+            and chunk["subEvent"] == "messageSent"
+            and chunk["payload"]["message"]["type"] == "text"
+        )
 
     def isTripStart(chunk) -> bool:
         msg = chunk["payload"]["message"]["text"]
@@ -151,7 +165,7 @@ def sseChatList(shutdownSeconds=10 * 60):
             return regResult.group()
 
     def isTripStop(chunk) -> bool:
-        return chunk["payload"]["message"]["text"][0:5] == "#結束行程"
+        return chunk["payload"]["message"]["text"][0:4] == "留守結束"
 
     def isTimesUp(startTime) -> bool:
         if shutdownSeconds <= 0:
@@ -169,23 +183,19 @@ def sseChatList(shutdownSeconds=10 * 60):
                 decodedData = data.decode("utf-8")
                 if "data:{" in decodedData:
                     chunk = json.loads(decodedData.replace("data:", ""))
-                    if (
-                        chunk["event"] == "chat"
-                        and "subEvent" in chunk
-                        and chunk["subEvent"] == "message"
-                        and chunk["payload"]["message"]["type"] == "text"
-                    ):
+                    if isClientSendingTextMsg(chunk):
                         chatId = chunk["payload"]["source"]["chatId"]
                         if isTripStart(chunk):
                             tripId = getTripId(chunk)
                             username = lineClient.getChat(chatId)["profile"]["name"]
                             startTrip(chatId, tripId, username)
                             print(f"User [{username}] start a trip.")
-                        elif isTripStop(chunk):
+                    elif isGuardSendingTextMsg(chunk):
+                        chatId = chunk["payload"]["source"]["chatId"]
+                        if isTripStop(chunk):
                             username = lineClient.getChat(chatId)["profile"]["name"]
                             stopTrip(chatId)
                             print(f"User [{username}] stop a trip.")
-
                 if isTimesUp(startTime):
                     print(f"Time's up: {shutdownSeconds} seconds.")
                     sys.exit(0)
