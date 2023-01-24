@@ -61,6 +61,18 @@ def startTrip(chatId: str, tripId: str, username: str):
     # Follow up
     lineClient.addFollowedUp(chatId)
 
+    # 釘選訊息
+    time.sleep(1.5)
+    messageEventList = lineClient.getMessages(chatId)
+    for messageEvent in messageEventList:
+        if (
+            messageEvent["type"] == "messageSent"
+            and messageEvent["message"]["type"] == "text"
+            and messageEvent["message"]["text"][0:20] == "【留守管理員通知頻道 - 旅程建立成功】"
+        ):
+            lineClient.pinMessage(chatId, messageEvent["message"]["id"])
+            break
+
 
 def stopTrip(chatId: str):
     """
@@ -167,9 +179,6 @@ def sseChatList(shutdownSeconds=10 * 60):
     def isTripStop(chunk) -> bool:
         return chunk["payload"]["message"]["text"][0:4] == "留守結束"
 
-    def isTripCreation(chunk) -> bool:
-        return chunk["payload"]["message"]["text"][0:20] == "【留守管理員通知頻道 - 旅程建立成功】"
-
     def isTimesUp(startTime) -> bool:
         if shutdownSeconds <= 0:
             return False
@@ -199,9 +208,6 @@ def sseChatList(shutdownSeconds=10 * 60):
                             username = lineClient.getChat(chatId)["profile"]["name"]
                             stopTrip(chatId)
                             print(f"User [{username}] stop a trip.")
-                        elif isTripCreation(chunk):
-                            messageId = chunk["payload"]["message"]["id"]
-                            lineClient.pinMessage(chatId, messageId)
                 if isTimesUp(startTime):
                     print(f"Time's up: {shutdownSeconds} seconds.")
                     sys.exit(0)

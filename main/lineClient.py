@@ -136,7 +136,7 @@ class LineClient:
         """
         return json.loads(
             self.session.get(
-                url="https://chat.line.biz/api/v1/bots/" + self.mid + "/messages/" + chatId,
+                url="https://chat.line.biz/api/v2/bots/" + self.mid + "/messages/" + chatId,
                 headers=self.defaultHeaders,
                 data=None,
                 allow_redirects=True,
