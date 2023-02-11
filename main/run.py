@@ -108,14 +108,14 @@ def scanChatList():
         if chat["status"] == "blocked":
             return False
         msg = chat["latestEvent"]["message"]["text"]
-        regResult = re.search("T-[0-9]+-[a-zA-Z0-9]{3}", msg)
+        regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
         return regResult is not None
 
     def getTripId(chat) -> str:
         if chat["status"] == "blocked":
             return ""
         msg = chat["latestEvent"]["message"]["text"]
-        regResult = re.search("T-[0-9]+-[a-zA-Z0-9]{3}", msg)
+        regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
         if regResult is None:
             return ""
         else:
@@ -174,12 +174,12 @@ def sseChatList(shutdownSeconds=10 * 60):
 
     def isTripStart(chunk) -> bool:
         msg = chunk["payload"]["message"]["text"]
-        regResult = re.search("T-[0-9]+-[a-zA-Z0-9]{3}", msg)
+        regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
         return regResult is not None
 
     def getTripId(chunk) -> str:
         msg = chunk["payload"]["message"]["text"]
-        regResult = re.search("T-[0-9]+-[a-zA-Z0-9]{3}", msg)
+        regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
         if regResult is None:
             return ""
         else:
