@@ -4,6 +4,7 @@ import sys
 import time
 import json
 import asyncio
+from aiohttp import web
 from datetime import datetime, timedelta
 from lineClient import LineClient
 from firebaseClient import FirebaseClient
@@ -221,10 +222,25 @@ async def sseChatList(shutdownSeconds=10 * 60):
 
 
 async def main():
+    # Line Login
     await lineClient.loginWithEmail()
-    shutdownSeconds = int(os.environ.get("SHUTDOWN_SECONDS", 10 * 60))
+
+    # Start a web server for health check
+    async def hello(request):
+        return web.Response(text="Hello, world")
+
+    server = web.Application()
+    server.add_routes([web.get("/", hello)])
+    runner = web.AppRunner(server)
+    await runner.setup()
+    site = web.TCPSite(runner)
+    await site.start()
+
+    # app
     await scanChatList()
-    await sseChatList(shutdownSeconds)
+    await sseChatList(int(os.environ.get("SHUTDOWN_SECONDS", 10 * 60)))
+
+    await asyncio.Event().wait()
 
 
 if __name__ == "__main__":
