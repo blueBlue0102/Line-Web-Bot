@@ -3,18 +3,16 @@ import re
 import sys
 import time
 import json
+import asyncio
 from datetime import datetime, timedelta
 from lineClient import LineClient
 from firebaseClient import FirebaseClient
-
-lineClient = LineClient()
-firebaseClient = FirebaseClient()
 
 # TODO: 任何外部服務的叫用，都應設計失敗時的處理機制
 # TODO: 要假設 Line 的 API 所回傳的 Data Type 可能改變
 
 
-def startTrip(chatId: str, tripId: str, username: str):
+async def startTrip(chatId: str, tripId: str, username: str):
     """
     「建立行程」的處理邏輯
     """
@@ -23,7 +21,7 @@ def startTrip(chatId: str, tripId: str, username: str):
     tripData = firebaseClient.getTrip(tripId)
     if tripData is None:
         # 沒找到
-        lineClient.sendMessage(chatId, (f"很抱歉，沒有找到對應的行程代碼（{tripId}）\n" "請確認代碼沒有輸入錯誤，或是再試一次"))
+        await lineClient.sendMessage(chatId, (f"很抱歉，沒有找到對應的行程代碼（{tripId}）\n" "請確認代碼沒有輸入錯誤，或是再試一次"))
         return
 
     # 找到了，開始執行動作
@@ -40,14 +38,14 @@ def startTrip(chatId: str, tripId: str, username: str):
         f'行程內容：\n{tripData["pathDetail"]}\n\n'
         f'▲ 延遲 {tripData["delayHour"]} 小時通報'
     )
-    lineClient.sendMessage(chatId, message)
+    await lineClient.sendMessage(chatId, message)
 
     # 發送行程提醒
     message = "已收到行程申請，提醒您，出發前回傳「登山當天的衣著」與「攜帶裝備之照片或清單」，才算完成申請程序，並於出發時回覆「啟動留守」後才會進行留守服務唷！"
-    lineClient.sendMessage(chatId, message)
+    await lineClient.sendMessage(chatId, message)
 
     # 更改暱稱
-    lineClient.changeNickname(
+    await lineClient.changeNickname(
         chatId,
         (
             f"{username[0: 2]}"
@@ -59,39 +57,39 @@ def startTrip(chatId: str, tripId: str, username: str):
     )
 
     # Follow up
-    lineClient.addFollowedUp(chatId)
+    await lineClient.addFollowedUp(chatId)
 
     # 釘選訊息
-    time.sleep(1.5)
-    messageEventList = lineClient.getMessages(chatId)
+    await asyncio.sleep(1.5)
+    messageEventList = await lineClient.getMessages(chatId)
     for messageEvent in messageEventList:
         if (
             messageEvent["type"] == "messageSent"
             and messageEvent["message"]["type"] == "text"
             and messageEvent["message"]["text"][0:20] == "【留守管理員通知頻道 - 旅程建立成功】"
         ):
-            lineClient.pinMessage(chatId, messageEvent["message"]["id"])
+            await lineClient.pinMessage(chatId, messageEvent["message"]["id"])
             break
 
 
-def stopTrip(chatId: str):
+async def stopTrip(chatId: str):
     """
     「結束行程」的處理邏輯
     """
-    lineClient.changeNickname(chatId, "")
-    lineClient.addResolved(chatId)
-    pinnedMessageList = lineClient.getPinnedMessage(chatId)
+    await lineClient.changeNickname(chatId, "")
+    await lineClient.addResolved(chatId)
+    pinnedMessageList = await lineClient.getPinnedMessage(chatId)
     for pinnedMessage in pinnedMessageList:
         if (
             pinnedMessage["type"] == "messageSent"
             and pinnedMessage["message"]["type"] == "text"
             and pinnedMessage["message"]["text"][0:20] == "【留守管理員通知頻道 - 旅程建立成功】"
         ):
-            lineClient.unpinMessage(chatId, pinnedMessage["message"]["id"])
+            await lineClient.unpinMessage(chatId, pinnedMessage["message"]["id"])
             break
 
 
-def scanChatList():
+async def scanChatList():
     """
     抓取最多 25 個訊息 inbox 的訊息，判斷是否要建立行程
     如果是，則開始建立行程的流程
@@ -124,33 +122,33 @@ def scanChatList():
     def isTripStop(chat) -> bool:
         return chat["status"] != "blocked" and chat["latestEvent"]["message"]["text"][0:4] == "留守結束"
 
-    def getUsername(chat) -> str:
+    async def getUsername(chat) -> str:
         if chat["chatType"] == "USER":
             return chat["profile"]["name"]
         else:
-            return lineClient.getChat(chat["chatId"])["profile"]["name"]
+            return (await lineClient.getChat(chat["chatId"]))["profile"]["name"]
 
-    chatList = lineClient.getChatList(folderType="INBOX")["list"]
+    chatList = (await lineClient.getChatList(folderType="INBOX"))["list"]
     for chat in chatList:
         chatId = chat["chatId"]
         if isClientSendingTextMsg(chat):
             if isTripStart(chat):
-                username = getUsername(chat)
+                username = await getUsername(chat)
                 tripId = getTripId(chat)
-                startTrip(chatId, tripId, username)
+                await startTrip(chatId, tripId, username)
                 print(f"User [{username}] start a trip.")
-                time.sleep(0.25)
+                await asyncio.sleep(0.25)
         elif isGuardSendingTextMsg(chat):
             if isTripStop(chat):
-                username = getUsername(chat)
-                stopTrip(chatId)
+                username = await getUsername(chat)
+                await stopTrip(chatId)
                 print(f"User [{username}] stop a trip.")
-                time.sleep(0.25)
+                await asyncio.sleep(0.25)
 
     print(f"scanChatList Finish")
 
 
-def sseChatList(shutdownSeconds=10 * 60):
+async def sseChatList(shutdownSeconds=10 * 60):
     """
     透過 SSE 取得 Line 的即時訊息通知
     收到訊息後，依據內容執行不同行為
@@ -196,7 +194,7 @@ def sseChatList(shutdownSeconds=10 * 60):
         else:
             return False
 
-    poll = lineClient.openPolling()
+    poll = await lineClient.openPolling()
     startTime = time.time()
     with poll.getresponse() as response:
         while not response.closed:
@@ -208,21 +206,29 @@ def sseChatList(shutdownSeconds=10 * 60):
                         chatId = chunk["payload"]["source"]["chatId"]
                         if isTripStart(chunk):
                             tripId = getTripId(chunk)
-                            username = lineClient.getChat(chatId)["profile"]["name"]
-                            startTrip(chatId, tripId, username)
+                            username = (await lineClient.getChat(chatId))["profile"]["name"]
+                            await startTrip(chatId, tripId, username)
                             print(f"User [{username}] start a trip.")
                     elif isGuardSendingTextMsg(chunk):
                         chatId = chunk["payload"]["source"]["chatId"]
                         if isTripStop(chunk):
-                            username = lineClient.getChat(chatId)["profile"]["name"]
-                            stopTrip(chatId)
+                            username = (await lineClient.getChat(chatId))["profile"]["name"]
+                            await stopTrip(chatId)
                             print(f"User [{username}] stop a trip.")
                 if isTimesUp(startTime):
                     print(f"Time's up: {shutdownSeconds} seconds.")
                     sys.exit(0)
 
 
-if __name__ == "__main__":
+async def main():
+    await lineClient.loginWithEmail()
     shutdownSeconds = int(os.environ.get("SHUTDOWN_SECONDS", 10 * 60))
-    scanChatList()
-    sseChatList(shutdownSeconds)
+    await scanChatList()
+    await sseChatList(shutdownSeconds)
+
+
+if __name__ == "__main__":
+    lineClient = LineClient()
+    firebaseClient = FirebaseClient()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
