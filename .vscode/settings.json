@@ -1,6 +1,10 @@
 {
-  "editor.formatOnSave": true,
-  "python.linting.enabled": true,
-  "python.formatting.provider": "autopep8",
-  "python.formatting.autopep8Args": ["--max-line-length", "125", "--experimental"]
+  "python.formatting.provider": "none",
+  "black-formatter.args": [
+    "--line-length=135"
+  ],
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
 }
