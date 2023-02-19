@@ -25,6 +25,9 @@ class LineClient:
         self.session = aiohttp.ClientSession()
         self.tempData = {}
 
+    async def asyncInit(self):
+        await self.loginWithEmail()
+
     async def loginWithEmail(self):
         """
         根據環境參數所設定的 email 和密碼進行 Line 帳號的登入
