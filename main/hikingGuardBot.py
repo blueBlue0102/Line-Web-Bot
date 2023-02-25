@@ -11,10 +11,11 @@ class HikingGuardBot:
     def __init__(self):
         pass
 
-    async def asyncInit(self):
+    async def asyncInit(self, isFirstStartUp=True):
         self.lineClient = LineClient()
         await self.lineClient.asyncInit()
-        self.firebaseClient = FirebaseClient()
+        if isFirstStartUp:
+            self.firebaseClient = FirebaseClient()
 
     async def __startTrip(self, chatId: str, tripId: str, username: str):
         """
@@ -199,11 +200,12 @@ class HikingGuardBot:
         startTime = time.time()
         with poll.getresponse() as response:
             while not response.closed:
-                await asyncio.sleep(1000)
-                if isTimesUp(startTime):
-                    print(f"Time's up: {shutdownSeconds} seconds.")
-                    return
                 for data in response:
+                    if isTimesUp(startTime):
+                        print(f"Time's up: {shutdownSeconds} seconds.")
+                        poll.close()
+                        await self.lineClient.close()
+                        return
                     decodedData = data.decode("utf-8")
                     if "data:{" in decodedData:
                         chunk = json.loads(decodedData.replace("data:", ""))

@@ -420,3 +420,7 @@ class LineClient:
             allow_redirects=True,
         )
         return json.loads(await response.text())["messages"]
+
+    async def close(self):
+        await self.session.close()
+        return

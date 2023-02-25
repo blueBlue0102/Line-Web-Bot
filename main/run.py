@@ -1,4 +1,5 @@
 import os
+import sys
 import asyncio
 from aiohttp import web
 from hikingGuardBot import HikingGuardBot
@@ -7,35 +8,52 @@ from hikingGuardBot import HikingGuardBot
 # TODO: 要假設 Line 的 API 所回傳的 Data Type 可能改變
 
 
-async def startWebServer():
+def startWebServer():
     """
     Start a web server for health check
     """
 
-    async def hello(request):
-        return web.Response(text="Hello, world")
+    async def healthCheck(request):
+        global hikingGuardBotIsAlive
+        if hikingGuardBotIsAlive:
+            return web.Response(text="Hello, world")
+        else:
+            sys.exit("Bot")
 
     server = web.Application()
-    server.add_routes([web.get("/", hello)])
-    runner = web.AppRunner(server)
-    await runner.setup()
-    await web.TCPSite(runner, "localhost", 8080).start()
+    server.add_routes([web.get("/", healthCheck)])
+
+    web.run_app(server, port=8080, shutdown_timeout=3)
 
 
 async def startHikingGuardBot(SSEshutdownSeconds=10 * 60):
     """
     啟動 Hiking Guard 聊天機器人
     """
+    isFirstStartUp = True
+    bot = HikingGuardBot()
     while True:
-        bot = HikingGuardBot()
-        await bot.asyncInit()
-        await bot.scanChatList()
-        await bot.sseChatList(SSEshutdownSeconds)
+        try:
+            await bot.asyncInit(isFirstStartUp)
+            isFirstStartUp = False
+
+            await bot.scanChatList()
+            await bot.sseChatList(SSEshutdownSeconds)
+        except Exception as e:
+            print(f"An Error Raise: {e}")
+            global hikingGuardBotIsAlive
+            hikingGuardBotIsAlive = False
+            raise e
+
+
+async def main():
+    async with asyncio.TaskGroup() as taskGroup:
+        webServerTask = taskGroup.create_task(asyncio.to_thread(startWebServer))
+        hikingGuardTask = taskGroup.create_task(startHikingGuardBot(SSEshutdownSeconds))
 
 
 if __name__ == "__main__":
     SSEshutdownSeconds = int(os.environ.get("SSE_SHUTDOWN_SECONDS", 10 * 60))
-    loop = asyncio.get_event_loop_policy().get_event_loop()
-    loop.create_task(startWebServer())
-    loop.create_task(startHikingGuardBot())
-    loop.run_forever()
+    global hikingGuardBotIsAlive
+    hikingGuardBotIsAlive = True
+    asyncio.run(main())
