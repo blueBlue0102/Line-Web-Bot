@@ -101,15 +101,37 @@ def scanChatList():
     def isClientSendingTextMsg(chat) -> bool:
         return chat["latestEvent"]["type"] == "message" and chat["latestEvent"]["message"]["type"] == "text"
 
+    def isClientSendingStickerMsg(chat) -> bool:
+        return chat["latestEvent"]["type"] == "message" and chat["latestEvent"]["message"]["type"] == "sticker"
+
     def isGuardSendingTextMsg(chat) -> bool:
         return chat["latestEvent"]["type"] == "messageSent" and chat["latestEvent"]["message"]["type"] == "text"
 
+    def isGuardSendingStickerMsg(chat) -> bool:
+        return chat["latestEvent"]["type"] == "messageSent" and chat["latestEvent"]["message"]["type"] == "sticker"
+
     def isTripStart(chat) -> bool:
+        """
+        傳送的訊息是否含有行程代碼
+        """
         if chat["status"] == "blocked":
             return False
         msg = chat["latestEvent"]["message"]["text"]
         regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
         return regResult is not None
+
+    def isStartGuarding(chat) -> bool:
+        """
+        留守人宣布啟動留守
+        """
+        if chat["status"] == "blocked":
+            return False
+
+        msg = chat["latestEvent"]["message"]
+        if msg["type"] == "sticker":
+            return msg["packageId"] == "17139130" and msg["stickerId"] == "443245260"
+        elif msg["type"] == "text":
+            return msg["text"] == "啟動留守" or msg["text"] == "留守啟動"
 
     def getTripId(chat) -> str:
         if chat["status"] == "blocked":
@@ -145,6 +167,17 @@ def scanChatList():
                 username = getUsername(chat)
                 stopTrip(chatId)
                 print(f"User [{username}] stop a trip.")
+                time.sleep(0.25)
+            elif isStartGuarding(chat):
+                username = getUsername(chat)
+                lineClient.sendMessage(chatId, "沿途有訊號時，記得回報人員狀況和座標位置喔。")
+                print(f"User [{username}] start guarding.")
+                time.sleep(0.25)
+        elif isGuardSendingStickerMsg(chat):
+            if isStartGuarding(chat):
+                username = getUsername(chat)
+                lineClient.sendMessage(chatId, "沿途有訊號時，記得回報人員狀況和座標位置喔。")
+                print(f"User [{username}] start guarding.")
                 time.sleep(0.25)
 
     print(f"scanChatList Finish")
