@@ -151,7 +151,11 @@ def scanChatList():
             return regResult.group()
 
     def isTripStop(chat) -> bool:
-        return chat["status"] != "blocked" and chat["latestEvent"]["message"]["text"][0:4] == "留守結束"
+        if chat["status"] == "blocked":
+            return False
+
+        text = chat["latestEvent"]["message"]["text"]
+        return text == "留守結束" or text == "結束留守"
 
     def getUsername(chat) -> str:
         if chat["chatType"] == "USER":
@@ -255,7 +259,8 @@ def sseChatList(shutdownSeconds=10 * 60):
             return regResult.group()
 
     def isTripStop(chunk) -> bool:
-        return chunk["payload"]["message"]["text"][0:4] == "留守結束"
+        text = chunk["payload"]["message"]["text"]
+        return text == "留守結束" or text == "結束留守"
 
     def isTimesUp(startTime) -> bool:
         if shutdownSeconds <= 0:
