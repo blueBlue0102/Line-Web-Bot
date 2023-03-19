@@ -140,6 +140,8 @@ def scanChatList():
         elif msg["type"] == "text":
             return msg["text"] == "啟動留守" or msg["text"] == "留守啟動"
 
+        return False
+
     def getTripId(chat) -> str:
         if chat["status"] == "blocked":
             return ""
@@ -154,8 +156,13 @@ def scanChatList():
         if chat["status"] == "blocked":
             return False
 
-        text = chat["latestEvent"]["message"]["text"]
-        return text == "留守結束" or text == "結束留守"
+        msg = chat["latestEvent"]["message"]
+        if msg["type"] == "text":
+            return msg["text"] == "留守結束" or msg["text"] == "結束留守"
+        elif msg["type"] == "sticker":
+            return msg["packageId"] == "17139130" and msg["stickerId"] == "443245261"
+
+        return False
 
     def getUsername(chat) -> str:
         if chat["chatType"] == "USER":
@@ -189,6 +196,11 @@ def scanChatList():
                 username = getUsername(chat)
                 startGuarding(chatId)
                 print(f"User [{username}] start guarding.")
+                time.sleep(0.25)
+            elif isTripStop(chat):
+                username = getUsername(chat)
+                stopTrip(chatId)
+                print(f"User [{username}] stop a trip.")
                 time.sleep(0.25)
 
     print(f"scanChatList Finish")
@@ -250,6 +262,8 @@ def sseChatList(shutdownSeconds=10 * 60):
         elif msg["type"] == "sticker":
             return msg["packageId"] == "17139130" and msg["stickerId"] == "443245260"
 
+        return False
+
     def getTripId(chunk) -> str:
         msg = chunk["payload"]["message"]["text"]
         regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
@@ -259,8 +273,13 @@ def sseChatList(shutdownSeconds=10 * 60):
             return regResult.group()
 
     def isTripStop(chunk) -> bool:
-        text = chunk["payload"]["message"]["text"]
-        return text == "留守結束" or text == "結束留守"
+        msg = chunk["payload"]["message"]
+        if msg["type"] == "text":
+            return msg["text"] == "留守結束" or msg["text"] == "結束留守"
+        elif msg["type"] == "sticker":
+            return msg["packageId"] == "17139130" and msg["stickerId"] == "443245261"
+
+        return False
 
     def isTimesUp(startTime) -> bool:
         if shutdownSeconds <= 0:
@@ -300,6 +319,9 @@ def sseChatList(shutdownSeconds=10 * 60):
                         if isStartGuarding(chunk):
                             startGuarding(chatId)
                             print(f"User [{username}] start guarding.")
+                        elif isTripStop(chunk):
+                            stopTrip(chatId)
+                            print(f"User [{username}] stop a trip.")
                 if isTimesUp(startTime):
                     print(f"Time's up: {shutdownSeconds} seconds.")
                     sys.exit(0)
