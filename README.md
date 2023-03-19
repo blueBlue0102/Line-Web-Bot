@@ -40,7 +40,7 @@ firebase 憑證須至 GCP firebase 中取得
 ## requirements.txt
 
 `requirements.txt` 為運行本專案所必須的相依套件  
-使用 `pipreqs` 進行更新 `requirements.txt`
+當相依套件有異動時，可以使用 `pipreqs` 來更新 `requirements.txt`
 
 ```
 pipreqs --encoding utf-8 --force
