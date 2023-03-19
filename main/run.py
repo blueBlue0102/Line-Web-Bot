@@ -91,6 +91,13 @@ def stopTrip(chatId: str):
             break
 
 
+def startGuarding(chatId: str):
+    """
+    留守人開始進行留守
+    """
+    lineClient.sendMessage(chatId, "沿途有訊號時，記得回報人員狀況和座標位置喔。")
+
+
 def scanChatList():
     """
     抓取最多 25 個訊息 inbox 的訊息，判斷是否要建立行程
@@ -101,15 +108,37 @@ def scanChatList():
     def isClientSendingTextMsg(chat) -> bool:
         return chat["latestEvent"]["type"] == "message" and chat["latestEvent"]["message"]["type"] == "text"
 
+    def isClientSendingStickerMsg(chat) -> bool:
+        return chat["latestEvent"]["type"] == "message" and chat["latestEvent"]["message"]["type"] == "sticker"
+
     def isGuardSendingTextMsg(chat) -> bool:
         return chat["latestEvent"]["type"] == "messageSent" and chat["latestEvent"]["message"]["type"] == "text"
 
+    def isGuardSendingStickerMsg(chat) -> bool:
+        return chat["latestEvent"]["type"] == "messageSent" and chat["latestEvent"]["message"]["type"] == "sticker"
+
     def isTripStart(chat) -> bool:
+        """
+        傳送的訊息是否含有行程代碼
+        """
         if chat["status"] == "blocked":
             return False
         msg = chat["latestEvent"]["message"]["text"]
         regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
         return regResult is not None
+
+    def isStartGuarding(chat) -> bool:
+        """
+        留守人宣布啟動留守
+        """
+        if chat["status"] == "blocked":
+            return False
+
+        msg = chat["latestEvent"]["message"]
+        if msg["type"] == "sticker":
+            return msg["packageId"] == "17139130" and msg["stickerId"] == "443245260"
+        elif msg["type"] == "text":
+            return msg["text"] == "啟動留守" or msg["text"] == "留守啟動"
 
     def getTripId(chat) -> str:
         if chat["status"] == "blocked":
@@ -146,6 +175,17 @@ def scanChatList():
                 stopTrip(chatId)
                 print(f"User [{username}] stop a trip.")
                 time.sleep(0.25)
+            elif isStartGuarding(chat):
+                username = getUsername(chat)
+                startGuarding(chatId)
+                print(f"User [{username}] start guarding.")
+                time.sleep(0.25)
+        elif isGuardSendingStickerMsg(chat):
+            if isStartGuarding(chat):
+                username = getUsername(chat)
+                startGuarding(chatId)
+                print(f"User [{username}] start guarding.")
+                time.sleep(0.25)
 
     print(f"scanChatList Finish")
 
@@ -164,6 +204,14 @@ def sseChatList(shutdownSeconds=10 * 60):
             and chunk["payload"]["message"]["type"] == "text"
         )
 
+    def isClientSendingStickerMsg(chunk) -> bool:
+        return (
+            chunk["event"] == "chat"
+            and "subEvent" in chunk
+            and chunk["subEvent"] == "message"
+            and chunk["payload"]["message"]["type"] == "sticker"
+        )
+
     def isGuardSendingTextMsg(chunk) -> bool:
         return (
             chunk["event"] == "chat"
@@ -172,10 +220,31 @@ def sseChatList(shutdownSeconds=10 * 60):
             and chunk["payload"]["message"]["type"] == "text"
         )
 
+    def isGuardSendingStickerMsg(chunk) -> bool:
+        return (
+            chunk["event"] == "chat"
+            and "subEvent" in chunk
+            and chunk["subEvent"] == "messageSent"
+            and chunk["payload"]["message"]["type"] == "sticker"
+        )
+
     def isTripStart(chunk) -> bool:
+        """
+        檢測訊息內容是否含有行程代碼
+        """
         msg = chunk["payload"]["message"]["text"]
         regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
         return regResult is not None
+
+    def isStartGuarding(chunk) -> bool:
+        """
+        留守人宣布啟動留守
+        """
+        msg = chunk["payload"]["message"]
+        if msg["type"] == "text":
+            return msg["text"] == "啟動留守" or msg["text"] == "留守啟動"
+        elif msg["type"] == "sticker":
+            return msg["packageId"] == "17139130" and msg["stickerId"] == "443245260"
 
     def getTripId(chunk) -> str:
         msg = chunk["payload"]["message"]["text"]
@@ -213,10 +282,19 @@ def sseChatList(shutdownSeconds=10 * 60):
                             print(f"User [{username}] start a trip.")
                     elif isGuardSendingTextMsg(chunk):
                         chatId = chunk["payload"]["source"]["chatId"]
+                        username = lineClient.getChat(chatId)["profile"]["name"]
                         if isTripStop(chunk):
-                            username = lineClient.getChat(chatId)["profile"]["name"]
                             stopTrip(chatId)
                             print(f"User [{username}] stop a trip.")
+                        elif isStartGuarding(chunk):
+                            startGuarding(chatId)
+                            print(f"User [{username}] start guarding.")
+                    elif isGuardSendingStickerMsg(chunk):
+                        chatId = chunk["payload"]["source"]["chatId"]
+                        username = lineClient.getChat(chatId)["profile"]["name"]
+                        if isStartGuarding(chunk):
+                            startGuarding(chatId)
+                            print(f"User [{username}] start guarding.")
                 if isTimesUp(startTime):
                     print(f"Time's up: {shutdownSeconds} seconds.")
                     sys.exit(0)
