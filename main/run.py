@@ -121,8 +121,6 @@ def scanChatList():
         """
         傳送的訊息是否含有行程代碼
         """
-        if chat["status"] == "blocked":
-            return False
         msg = chat["latestEvent"]["message"]["text"]
         regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
         return regResult is not None
@@ -131,9 +129,6 @@ def scanChatList():
         """
         留守人宣布啟動留守
         """
-        if chat["status"] == "blocked":
-            return False
-
         msg = chat["latestEvent"]["message"]
         if msg["type"] == "sticker":
             return msg["packageId"] == "17139130" and msg["stickerId"] == "443245260"
@@ -142,9 +137,20 @@ def scanChatList():
 
         return False
 
+    def isGuardSendingTripId(chat) -> bool:
+        """
+        訊息內容是純粹的行程代碼，沒有任何多餘的字元
+        """
+        msg = chat["latestEvent"]["message"]["text"]
+        if len(msg) != 19:
+            return False
+        regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
+        if regResult is None:
+            return False
+        else:
+            return True
+
     def getTripId(chat) -> str:
-        if chat["status"] == "blocked":
-            return ""
         msg = chat["latestEvent"]["message"]["text"]
         regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
         if regResult is None:
@@ -153,9 +159,6 @@ def scanChatList():
             return regResult.group()
 
     def isTripStop(chat) -> bool:
-        if chat["status"] == "blocked":
-            return False
-
         msg = chat["latestEvent"]["message"]
         if msg["type"] == "text":
             return msg["text"] == "留守結束" or msg["text"] == "結束留守"
@@ -173,7 +176,9 @@ def scanChatList():
     chatList = lineClient.getChatList(folderType="INBOX")["list"]
     for chat in chatList:
         chatId = chat["chatId"]
-        if isClientSendingTextMsg(chat):
+        if chat["status"] == "blocked":
+            continue
+        elif isClientSendingTextMsg(chat):
             if isTripStart(chat):
                 username = getUsername(chat)
                 tripId = getTripId(chat)
@@ -190,6 +195,12 @@ def scanChatList():
                 username = getUsername(chat)
                 startGuarding(chatId)
                 print(f"User [{username}] start guarding.")
+                time.sleep(0.25)
+            elif isGuardSendingTripId(chat):
+                username = getUsername(chat)
+                tripId = getTripId(chat)
+                startTrip(chatId, tripId, username)
+                print(f"User [{username}] start a trip By Guard.")
                 time.sleep(0.25)
         elif isGuardSendingStickerMsg(chat):
             if isStartGuarding(chat):
@@ -264,6 +275,19 @@ def sseChatList(shutdownSeconds=10 * 60):
 
         return False
 
+    def isGuardSendingTripId(chunk) -> bool:
+        """
+        訊息內容是純粹的行程代碼，沒有任何多餘的字元
+        """
+        msg = chunk["payload"]["message"]["text"]
+        if len(msg) != 19:
+            return False
+        regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
+        if regResult is None:
+            return False
+        else:
+            return True
+
     def getTripId(chunk) -> str:
         msg = chunk["payload"]["message"]["text"]
         regResult = re.search("T-[0-9]{13}-[a-zA-Z0-9]{3}", msg)
@@ -313,6 +337,11 @@ def sseChatList(shutdownSeconds=10 * 60):
                         elif isStartGuarding(chunk):
                             startGuarding(chatId)
                             print(f"User [{username}] start guarding.")
+                        elif isGuardSendingTripId(chunk):
+                            tripId = getTripId(chunk)
+                            username = lineClient.getChat(chatId)["profile"]["name"]
+                            startTrip(chatId, tripId, username)
+                            print(f"User [{username}] start a trip By Guard.")
                     elif isGuardSendingStickerMsg(chunk):
                         chatId = chunk["payload"]["source"]["chatId"]
                         username = lineClient.getChat(chatId)["profile"]["name"]
