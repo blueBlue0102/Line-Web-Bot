@@ -14,7 +14,7 @@ firebaseClient = FirebaseClient()
 # TODO: 要假設 Line 的 API 所回傳的 Data Type 可能改變
 
 
-def startTrip(chatId: str, tripId: str, username: str):
+def startTrip(chatId: str, tripId: str, username: str, isGroup=False):
     """
     「建立行程」的處理邏輯
     """
@@ -47,15 +47,33 @@ def startTrip(chatId: str, tripId: str, username: str):
     lineClient.sendMessage(chatId, message)
 
     # 更改暱稱
+    nPathDate = (
+        f"{inDatetime.month}/{inDatetime.day}"
+        if inDatetime.day == outDatetime.day
+        else f"{inDatetime.month}/{inDatetime.day}-{outDatetime.day}"
+    )
+    nOutDateTime = f"{outDatetime.hour}:{outDatetime.minute}"
+    nDelayHour = f"+{tripData['delayHour']}"
+
+    nUserName = ""
+    nPathName = ""
+    othersLength = len(nPathDate + nOutDateTime + nDelayHour)
+    if isGroup is True:
+        ## 對話是群組
+        ### pathname: 全部放，但須注意要保留至少兩個字元給 username
+        ### username: 能放多少就放多少
+        nPathName = tripData["pathName"][0 : 48 - othersLength]
+        nUserName = username[0 : 50 - othersLength - len(nPathName)]
+    else:
+        ## 對話是個人
+        ### username: 只保留 2 個字元
+        ### pathname: 全部保留直到到達 20 個字元
+        nUserName = username[0:2]
+        nPathName = tripData["pathName"][0 : 20 - othersLength - len(nUserName)]
+
     lineClient.changeNickname(
         chatId,
-        (
-            f"{username[0: 2]}"
-            f"{inDatetime.month}/{inDatetime.day}-{outDatetime.day}"
-            f"{tripData['pathName'][0:2]}"
-            f"{outDatetime.hour}:{outDatetime.minute}"
-            f"+{tripData['delayHour']}"
-        ),
+        (nUserName + nPathDate + nPathName + nOutDateTime + nDelayHour),
     )
 
     # Follow up
@@ -173,6 +191,9 @@ def scanChatList():
         else:
             return lineClient.getChat(chat["chatId"])["profile"]["name"]
 
+    def chatTypeIsGroup(chat) -> bool:
+        return chat["chatType"] == "GROUP"
+
     chatList = lineClient.getChatList(folderType="INBOX")["list"]
     for chat in chatList:
         chatId = chat["chatId"]
@@ -182,7 +203,7 @@ def scanChatList():
             if isTripStart(chat):
                 username = getUsername(chat)
                 tripId = getTripId(chat)
-                startTrip(chatId, tripId, username)
+                startTrip(chatId, tripId, username, chatTypeIsGroup(chat))
                 print(f"User [{username}] start a trip.")
                 time.sleep(0.25)
         elif isGuardSendingTextMsg(chat):
@@ -199,7 +220,7 @@ def scanChatList():
             elif isGuardSendingTripId(chat):
                 username = getUsername(chat)
                 tripId = getTripId(chat)
-                startTrip(chatId, tripId, username)
+                startTrip(chatId, tripId, username, chatTypeIsGroup(chat))
                 print(f"User [{username}] start a trip By Guard.")
                 time.sleep(0.25)
         elif isGuardSendingStickerMsg(chat):
@@ -313,6 +334,9 @@ def sseChatList(shutdownSeconds=10 * 60):
         else:
             return False
 
+    def chatTypeIsGroup(chatType: str) -> bool:
+        return chatType == "GROUP"
+
     poll = lineClient.openPolling()
     startTime = time.time()
     with poll.getresponse() as response:
@@ -325,8 +349,9 @@ def sseChatList(shutdownSeconds=10 * 60):
                         chatId = chunk["payload"]["source"]["chatId"]
                         if isTripStart(chunk):
                             tripId = getTripId(chunk)
-                            username = lineClient.getChat(chatId)["profile"]["name"]
-                            startTrip(chatId, tripId, username)
+                            chat = lineClient.getChat(chatId)
+                            username = chat["profile"]["name"]
+                            startTrip(chatId, tripId, username, chatTypeIsGroup(chat["chatType"]))
                             print(f"User [{username}] start a trip.")
                     elif isGuardSendingTextMsg(chunk):
                         chatId = chunk["payload"]["source"]["chatId"]
@@ -339,8 +364,9 @@ def sseChatList(shutdownSeconds=10 * 60):
                             print(f"User [{username}] start guarding.")
                         elif isGuardSendingTripId(chunk):
                             tripId = getTripId(chunk)
-                            username = lineClient.getChat(chatId)["profile"]["name"]
-                            startTrip(chatId, tripId, username)
+                            chat = lineClient.getChat(chatId)
+                            username = chat["profile"]["name"]
+                            startTrip(chatId, tripId, username, chatTypeIsGroup(chat["chatType"]))
                             print(f"User [{username}] start a trip By Guard.")
                     elif isGuardSendingStickerMsg(chunk):
                         chatId = chunk["payload"]["source"]["chatId"]
