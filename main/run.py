@@ -52,7 +52,7 @@ def startTrip(chatId: str, tripId: str, username: str, isGroup=False):
         if inDatetime.day == outDatetime.day
         else f"{inDatetime.month}/{inDatetime.day}-{outDatetime.day}"
     )
-    nOutDateTime = f"{outDatetime.hour}:{outDatetime.minute}"
+    nOutDateTime = f"{outDatetime.hour}{outDatetime.minute}"
     nDelayHour = f"+{tripData['delayHour']}"
 
     nUserName = ""
