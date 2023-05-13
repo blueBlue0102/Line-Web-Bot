@@ -29,8 +29,6 @@ pip install -r requirements.txt -r requirements-dev.txt
 需要 firebase 的憑證  
 目前憑證的位置固定放在專案根目錄的 `./secrets` 之下  
 
-*註：由於 Cloud Run 無法 Mount 一個路徑下的多個檔案，所以各個憑證會再有自己的資料夾*
-
 ```
 mkdir -p secrets/firebase
 ```
@@ -48,13 +46,9 @@ pipreqs --encoding utf-8 --force
 
 `requirements-dev.txt` 則為進行開發時才需要的套件
 
-## Docker
+## 升版
 
-### Build & Push Image
+當發布新版 bot 時，需進行以下行為：
 
-TODO: 改成正式專案的路徑
-
-```
-docker build . -t asia-east1-docker.pkg.dev/blue-chatbot-371911/hiking-bot/hiking-bot:1.0.0
-docker push asia-east1-docker.pkg.dev/blue-chatbot-371911/hiking-bot/hiking-bot:1.0.0
-```
+- 更新 `.github/workflows/build-image-and-deploy-to-gce.yaml` 中的 `CHATBOT_VERSION`
+- 更新 `CHANGELOG.md`
