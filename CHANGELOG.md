@@ -1,6 +1,12 @@
 # CHANGELOG
 
-## develop
+## 1.2.0
+
+- 重構程式碼，功能不變  
+  將機器人邏輯獨立出另一個 class，而非放在 `run.py` 裡面
+- 建立 Github Action CICD 流程，功能不變
+- 更新 SSE 的 API version `v1` -> `v2`  
+  `v1` 已被 LINE 棄用
 
 ## 1.1.1
 
