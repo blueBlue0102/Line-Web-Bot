@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## develop
+## 1.2.0
 
 - 重構程式碼，功能不變  
   將機器人邏輯獨立出另一個 class，而非放在 `run.py` 裡面
