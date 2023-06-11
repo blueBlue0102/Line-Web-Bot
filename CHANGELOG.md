@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## develop
+
+- 於 SSE 的 while loop 中進行短暫 `sleep`，以讓 log 能被即時讀取
+
 ## 1.2.0
 
 - 重構程式碼，功能不變  
