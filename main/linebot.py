@@ -337,7 +337,6 @@ class LineBot:
             if response.getcode() != 200:
                 sys.exit(f"SSE poll HTTP status code is not 200, code: {response.getcode()}")
             while not response.closed:
-                time.sleep(0.00001)
                 for data in response:
                     decodedData = data.decode("utf-8")
                     if "data:{" in decodedData:

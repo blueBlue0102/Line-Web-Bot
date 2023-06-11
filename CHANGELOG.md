@@ -2,7 +2,9 @@
 
 ## develop
 
-- 於 SSE 的 while loop 中進行短暫 `sleep`，以讓 log 能被即時讀取
+- 修改 Dockerfile 中關於 Python 的啟動指令  
+  增加 `-u` 的參數，讓 log 可以即時被印出來
+  <https://stackoverflow.com/questions/29663459/python-app-does-not-print-anything-when-running-detached-in-docker>
 
 ## 1.2.0
 
