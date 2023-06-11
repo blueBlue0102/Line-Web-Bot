@@ -387,7 +387,7 @@ class LineClient:
         poll = http.client.HTTPSConnection("chat-streaming-api.line.biz")
         poll.request(
             "GET",
-            "/api/v1/sse?token="
+            "/api/v2/sse?token="
             + streamingApiToken
             + "&deviceToken=&deviceType=&clientType=PC&pingSecs="
             + str(ping)
