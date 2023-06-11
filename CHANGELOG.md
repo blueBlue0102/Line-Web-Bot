@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## develop
+## 1.2.1
 
 - 修改 Dockerfile 中關於 Python 的啟動指令  
   增加 `-u` 的參數，讓 log 可以即時被印出來
