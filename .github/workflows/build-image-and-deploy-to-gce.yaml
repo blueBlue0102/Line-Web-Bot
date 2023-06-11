@@ -11,7 +11,7 @@ on:
 
 env:
   # 聊天機器人的版本，每當升版時需要進行更新
-  CHATBOT_VERSION: 1.2.0
+  CHATBOT_VERSION: 1.2.1
 
   # GCP Project ID（Artifact Registry 和 GCE 都在同一個 project）
   PROJECT_ID: hiking-guard
