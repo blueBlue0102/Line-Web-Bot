@@ -17,4 +17,4 @@ COPY main .
 
 ENV PYTHONPATH=/usr/lib/python3.11/site-packages
 
-CMD ["python", "run.py"]
+CMD ["python", "-u", "run.py"]

@@ -11,7 +11,7 @@ on:
 
 env:
   # 聊天機器人的版本，每當升版時需要進行更新
-  CHATBOT_VERSION: 1.2.0
+  CHATBOT_VERSION: 1.2.1
 
   # GCP Project ID（Artifact Registry 和 GCE 都在同一個 project）
   PROJECT_ID: hiking-guard
@@ -30,7 +30,7 @@ env:
   # GCE Instance Zone
   INSTANCE_ZONE: 'asia-east1-b'
   # GCE Instance Name
-  INSTANCE_NAME: 'hiking-guard'
+  INSTANCE_NAME: 'line-bot'
 
 jobs:
   setup-build-publish-deploy:
@@ -81,8 +81,7 @@ jobs:
         docker push "${{env.GAR_LOCATION}}-docker.pkg.dev/${{env.PROJECT_ID}}/${{env.REPOSITORY}}/${{env.IMAGE}}:${{env.CHATBOT_VERSION}}"
 
     # Update GCE
-    # TODO: 須將 GCE 的 project 位置更新為 hiking-guard 上
     - name: Deploy
       run: |-
-        gcloud compute instances update-container "projects/wired-height-381102/zones/${{env.INSTANCE_ZONE}}/instances/${{env.INSTANCE_NAME}}" \
+        gcloud compute instances update-container "projects/${{env.PROJECT_ID}}/zones/${{env.INSTANCE_ZONE}}/instances/${{env.INSTANCE_NAME}}" \
           --container-image ${{env.GAR_LOCATION}}-docker.pkg.dev/${{env.PROJECT_ID}}/${{env.REPOSITORY}}/${{env.IMAGE}}:${{env.CHATBOT_VERSION}}

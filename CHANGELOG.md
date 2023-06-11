@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 1.2.1
+
+- 修改 Dockerfile 中關於 Python 的啟動指令  
+  增加 `-u` 的參數，讓 log 可以即時被印出來
+  <https://stackoverflow.com/questions/29663459/python-app-does-not-print-anything-when-running-detached-in-docker>
+- 更新 GCE 的位置，放到 hiking-guard 專案之下
+
 ## 1.2.0
 
 - 重構程式碼，功能不變  
