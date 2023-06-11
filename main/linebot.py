@@ -1,4 +1,5 @@
 import re
+import sys
 import time
 import json
 from datetime import datetime, timedelta
@@ -333,10 +334,13 @@ class LineBot:
         poll = self.lineClient.openPolling()
         startTime = time.time()
         with poll.getresponse() as response:
+            if response.getcode() != 200:
+                sys.exit(f"SSE poll HTTP status code is not 200, code: {response.getcode()}")
             while not response.closed:
                 for data in response:
                     decodedData = data.decode("utf-8")
                     if "data:{" in decodedData:
+                        print(f"{datetime.now()}, Received SSE Data...")
                         chunk = json.loads(decodedData.replace("data:", ""))
                         if isClientSendingTextMsg(chunk):
                             chatId = chunk["payload"]["source"]["chatId"]
