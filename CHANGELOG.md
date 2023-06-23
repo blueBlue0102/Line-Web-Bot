@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## develop
+
+- (fix) 更新 SSE loop 的程式邏輯，以避免無限死循環
+
 ## 1.2.1
 
 - 修改 Dockerfile 中關於 Python 的啟動指令  
