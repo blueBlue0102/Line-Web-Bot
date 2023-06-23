@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## develop
+## 1.2.2
 
 - (fix) 更新 SSE loop 的程式邏輯，以避免無限死循環
 
