@@ -336,44 +336,45 @@ class LineBot:
         with poll.getresponse() as response:
             if response.getcode() != 200:
                 sys.exit(f"SSE poll HTTP status code is not 200, code: {response.getcode()}")
-            while not response.closed:
-                for data in response:
-                    decodedData = data.decode("utf-8")
-                    if "data:{" in decodedData:
-                        print(f"{datetime.now()}, Received SSE Data...")
-                        chunk = json.loads(decodedData.replace("data:", ""))
-                        if isClientSendingTextMsg(chunk):
-                            chatId = chunk["payload"]["source"]["chatId"]
-                            if isTripStart(chunk):
-                                tripId = getTripId(chunk)
-                                chat = self.lineClient.getChat(chatId)
-                                username = chat["profile"]["name"]
-                                self.__startTrip(chatId, tripId, username, chatTypeIsGroup(chat["chatType"]))
-                                print(f"User [{username}] start a trip.")
-                        elif isGuardSendingTextMsg(chunk):
-                            chatId = chunk["payload"]["source"]["chatId"]
-                            username = self.lineClient.getChat(chatId)["profile"]["name"]
-                            if isTripStop(chunk):
-                                self.__stopTrip(chatId)
-                                print(f"User [{username}] stop a trip.")
-                            elif isStartGuarding(chunk):
-                                self.__startGuarding(chatId)
-                                print(f"User [{username}] start guarding.")
-                            elif isGuardSendingTripId(chunk):
-                                tripId = getTripId(chunk)
-                                chat = self.lineClient.getChat(chatId)
-                                username = chat["profile"]["name"]
-                                self.__startTrip(chatId, tripId, username, chatTypeIsGroup(chat["chatType"]))
-                                print(f"User [{username}] start a trip By Guard.")
-                        elif isGuardSendingStickerMsg(chunk):
-                            chatId = chunk["payload"]["source"]["chatId"]
-                            username = self.lineClient.getChat(chatId)["profile"]["name"]
-                            if isStartGuarding(chunk):
-                                self.__startGuarding(chatId)
-                                print(f"User [{username}] start guarding.")
-                            elif isTripStop(chunk):
-                                self.__stopTrip(chatId)
-                                print(f"User [{username}] stop a trip.")
-                    if isTimesUp(startTime):
-                        print(f"Time's up: {shutdownSeconds} seconds.")
-                        return
+            for data in response:
+                decodedData = data.decode("utf-8")
+                if "data:{" in decodedData:
+                    print(f"{datetime.now()}, Received SSE Data...")
+                    chunk = json.loads(decodedData.replace("data:", ""))
+                    if isClientSendingTextMsg(chunk):
+                        chatId = chunk["payload"]["source"]["chatId"]
+                        if isTripStart(chunk):
+                            tripId = getTripId(chunk)
+                            chat = self.lineClient.getChat(chatId)
+                            username = chat["profile"]["name"]
+                            self.__startTrip(chatId, tripId, username, chatTypeIsGroup(chat["chatType"]))
+                            print(f"User [{username}] start a trip.")
+                    elif isGuardSendingTextMsg(chunk):
+                        chatId = chunk["payload"]["source"]["chatId"]
+                        username = self.lineClient.getChat(chatId)["profile"]["name"]
+                        if isTripStop(chunk):
+                            self.__stopTrip(chatId)
+                            print(f"User [{username}] stop a trip.")
+                        elif isStartGuarding(chunk):
+                            self.__startGuarding(chatId)
+                            print(f"User [{username}] start guarding.")
+                        elif isGuardSendingTripId(chunk):
+                            tripId = getTripId(chunk)
+                            chat = self.lineClient.getChat(chatId)
+                            username = chat["profile"]["name"]
+                            self.__startTrip(chatId, tripId, username, chatTypeIsGroup(chat["chatType"]))
+                            print(f"User [{username}] start a trip By Guard.")
+                    elif isGuardSendingStickerMsg(chunk):
+                        chatId = chunk["payload"]["source"]["chatId"]
+                        username = self.lineClient.getChat(chatId)["profile"]["name"]
+                        if isStartGuarding(chunk):
+                            self.__startGuarding(chatId)
+                            print(f"User [{username}] start guarding.")
+                        elif isTripStop(chunk):
+                            self.__stopTrip(chatId)
+                            print(f"User [{username}] stop a trip.")
+                if isTimesUp(startTime):
+                    print(f"Time's up: {shutdownSeconds} seconds.")
+                    return
+        print(f"{datetime.now()}, response ended.")
+        return
