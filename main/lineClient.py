@@ -24,7 +24,21 @@ class LineClient:
         }
         self.session = requests.session()
         self.tempData = {}
-        self.loginWithEmail()
+        if os.environ["LOGIN_WITH_COOKIE"].lower() == "true":
+            self.loginWithHardcodeCookie()
+        else:
+            self.loginWithEmail()
+
+    def loginWithHardcodeCookie(self):
+        self.session.cookies.set(
+            "ses",
+            os.environ["COOKIE_SES"],
+        )
+        self.getCsrfToken()
+        chatList = self.getChatList(folderType="INBOX")
+        if "list" not in chatList:
+            sys.exit(f"Cookie Login Failed")
+        print("[ NOTIF ] Success login...")
 
     def loginWithEmail(self):
         """
@@ -71,7 +85,13 @@ class LineClient:
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36",
                 "X-XSRF-TOKEN": csrfToken,
             },
-            json={"email": self.email, "password": self.password, "stayLoggedIn": False},
+            json={
+                "email": self.email,
+                "password": self.password,
+                "stayLoggedIn": False,
+                # TODO: How to bypass reCAPTCHA?
+                "gRecaptchaResponse": "",
+            },
         )
 
         if loginResult.status_code != 200:
