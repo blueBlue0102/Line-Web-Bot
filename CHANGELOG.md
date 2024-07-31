@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 1.2.2-recaptcha.0
+
+- (hotfix) 提供寫死 cookie 登入的方式  
+  新增兩個 env 參數，`LOGIN_WITH_COOKIE` 和 `COOKIE_SES`
+
 ## 1.2.2
 
 - (fix) 更新 SSE loop 的程式邏輯，以避免無限死循環
