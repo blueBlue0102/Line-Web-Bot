@@ -1,0 +1,57 @@
+# 提供手動更新 Chatbot token 的功能
+###########################################################
+name: Update Chatbot Token
+
+on:
+  workflow_dispatch:
+    inputs:
+      token:
+        description: 'Token'
+        required: true
+        type: string
+
+env:
+  # GCP Project ID
+  PROJECT_ID: hiking-guard
+  # GCP Workload Identity Federation Provider ID
+  WORKLOAD_IDENTITY_PROVIDER: projects/126249437858/locations/global/workloadIdentityPools/line-chatbot-pool/providers/line-chatbot-provider
+  # Service Account Email
+  SERVICE_ACCOUNT: line-chatbot-github-cicd@hiking-guard.iam.gserviceaccount.com
+
+  # GCE Instance Zone
+  INSTANCE_ZONE: 'asia-east1-b'
+  # GCE Instance Name
+  INSTANCE_NAME: 'line-bot'
+
+jobs:
+  update-chatbot-token:
+    name: Setup and Update Token
+    runs-on: ubuntu-latest
+    environment: production
+
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Configure Workload Identity Federation and generate an access token.
+    - name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v2'
+      with:
+        workload_identity_provider: ${{env.WORKLOAD_IDENTITY_PROVIDER}}
+        service_account: ${{env.SERVICE_ACCOUNT}}
+
+    # 安裝 gcloud
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v2'
+      with:
+        version: '>= 363.0.0'
+
+    # Update Token
+    - name: Update Token
+      run: |-
+        gcloud compute instances update-container "projects/${{env.PROJECT_ID}}/zones/${{env.INSTANCE_ZONE}}/instances/${{env.INSTANCE_NAME}}" \
+          --container-env COOKIE_SES=${{inputs.token}}

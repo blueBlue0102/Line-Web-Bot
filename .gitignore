@@ -2,3 +2,6 @@ __pycache__
 secrets
 venv
 .env
+
+# Ignore generated credentials from google-github-actions/auth
+gha-creds-*.json
