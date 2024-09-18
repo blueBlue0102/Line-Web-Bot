@@ -7,7 +7,7 @@ name: Build and Deploy to GCE
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "release" ]
 
 env:
   # 聊天機器人的版本，每當升版時需要進行更新
