@@ -1,4 +1,4 @@
-# 當 main branch 有新的 commit 時：
+# 當 release branch 有新的 commit 時：
 # - build image 
 # - 將 image push 至指定的 GCP Artifact Registry
 # - 更新特定 GCE instance 中 container 所使用的 image
